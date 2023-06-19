@@ -21,12 +21,12 @@ RWKV_CUDA_ON=1 python3 train.py  \
     --data_file "./test_text_document" \
     --data_type "binidx" \
     --vocab_size 50277  \
-    --ctx_len 1024 \
-    --epoch_save 1000 \
+    --ctx_len 4096 \
+    --epoch_save 100 \
     --epoch_count 10 \
     --n_layer 24 \
     --n_embd 2048 \
-    --epoch_steps 10 \
+    --epoch_steps 1000 \
     --epoch_begin 0 \
     --micro_bsz 1  \
     --pre_ffn 0 \
@@ -38,19 +38,22 @@ RWKV_CUDA_ON=1 python3 train.py  \
     --beta2 0.999 \
     --adam_eps 1e-8 \
     --accelerator gpu \
-    --devices 1 \
+    --devices 8 \
     --precision bf16 \
     --strategy deepspeed_stage_2 \
     --grad_cp 1   \
     --lora_parts=att,ffn,time,ln \
     --lora_r 8 \
     --lora_alpha 16 \
-    --lora_dropout 0.01
+    --lora_dropout 0.01 &
 
+#set the timer for stopping the training job
+sleep 900
+kill "$!"
 
 if [ $? -eq 1 ]; then
     echo "Training script error, please check CloudWatch logs"
     exit 1
 fi
 
-./s5cmd sync /tmp/llama_out s3://$MODEL_S3_BUCKET/RWKV/output/$(date +%Y-%m-%d-%H-%M-%S)/
+../../s5cmd sync ./*.pth s3://$MODEL_S3_BUCKET/RWKV/output/$(date +%Y-%m-%d-%H-%M-%S)/
