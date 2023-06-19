@@ -1,2 +1,3 @@
 *.pth
 openai.ipynb
+.ipynb_checkpoints
